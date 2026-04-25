@@ -1,0 +1,47 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+
+      loadbalancer:
+        cache:
+          enabled: true
+          ttl: 5s # Refresh cache every 5 seconds (very important)
+          capacity: 256
+          retry:
+
+      routes:
+        - id: shoppy-users
+          #          uri: http://localhost:8082 // without eureka server
+          uri: lb://SHOPPYUSERS
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+
+        - id: shoppy-product
+          #          uri: http://localhost:8083
+          uri: lb://SHOPPYPRODUCTS
+          predicates:
+            - Path=/api/prod/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+
+        - id: shoppy-order
+          #          uri: http://localhost:8084
+          uri: lb://SHOPPYORDERS
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+
+          eureka:
+            client:
+              service-url:
+                defaultZone: http://localhost:8761/eureka
+              registry-fetch-interval-seconds: 5
+              instance-info-replication-interval-seconds: 5
+            instance:
+              prefer-ip-address: true
